@@ -44,12 +44,12 @@ public abstract class RpcMethodBuilder<R> {
 
     /**
      * Creates an RPC request method builder.
-     * @param wrapper The schema wrapper of the RPC response.
+     * @param schema The schema of the RPC response.
      * @return The RPC request method builder.
      * @param <R> The type of object contained in the RPC response.
      */
-    public static <R> RpcParameterlessMethodBuilder<R> of(ManagementSchema<R> wrapper) {
-        return new RpcParameterlessMethodBuilder<>(wrapper.getName(), wrapper.getCodec(), wrapper.getSchema());
+    public static <R> RpcParameterlessMethodBuilder<R> of(ManagementSchema<R> schema) {
+        return new RpcParameterlessMethodBuilder<>(schema.getName(), schema.getCodec(), schema.getSchema());
     }
 
     public static class RpcParameterlessMethodBuilder<R> extends RpcMethodBuilder<R> {
@@ -90,20 +90,20 @@ public abstract class RpcMethodBuilder<R> {
 
         /**
          * Adds a parameter requirement to the RPC request method.
-         * @param wrapper The schema wrapper of the parameter content.
+         * @param schema The schema of the parameter content.
          * @return A new RPC request method builder containing the parameter.
          * @param <T> The type of object in the RPC request parameter.
          */
-        public <T> RpcParametrizedMethodBuilder<T,R> parameter(ManagementSchema<T> wrapper) {
+        public <T> RpcParametrizedMethodBuilder<T,R> parameter(ManagementSchema<T> schema) {
             return new RpcParametrizedMethodBuilder<>(
                     name,
                     codec,
-                    schema,
+                    this.schema,
                     identifier,
                     description,
-                    wrapper.getName(),
-                    wrapper.getCodec(),
-                    wrapper.getSchema()
+                    schema.getName(),
+                    schema.getCodec(),
+                    schema.getSchema()
             );
         }
 

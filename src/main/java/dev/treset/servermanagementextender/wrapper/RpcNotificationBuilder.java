@@ -39,12 +39,12 @@ public class RpcNotificationBuilder<T> {
 
     /**
      * Creates an RPC notification builder.
-     * @param wrapper The schema wrapper of the notification content.
+     * @param schema The schema of the notification content.
      * @return The RPC notification builder.
      * @param <T> The type of object the notification sends.
      */
-    public static <T> RpcNotificationBuilder<T> of(ManagementSchema<T> wrapper) {
-        return new RpcNotificationBuilder<>(wrapper.getName(), wrapper.getCodec(), wrapper.getSchema());
+    public static <T> RpcNotificationBuilder<T> of(ManagementSchema<T> schema) {
+        return new RpcNotificationBuilder<>(schema.getName(), schema.getCodec(), schema.getSchema());
     }
 
     /**
