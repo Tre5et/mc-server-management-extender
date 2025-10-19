@@ -34,7 +34,7 @@ public abstract class RecordSchemaBuilder<T> {
             for (SchemaData<T, ?> p : propertiesList()) {
                 schema = p.applyToSchema(schema);
             }
-            schemaEntry = RpcSchemaMixin.registerEntry(identifier.toString(), schema);
+            schemaEntry = RpcSchemaMixin.msme$registerEntry(identifier.toString(), schema);
         }
 
         return new ManagementSchema<>(codec, schemaEntry);

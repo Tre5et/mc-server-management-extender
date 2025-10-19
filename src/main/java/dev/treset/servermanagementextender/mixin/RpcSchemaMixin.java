@@ -9,5 +9,5 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(RpcSchema.class)
 public interface RpcSchemaMixin {
     @Invoker("registerEntry")
-    static RpcSchemaEntry registerEntry(String reference, RpcSchema schema) { throw new AssertionError(); }
+    static RpcSchemaEntry msme$registerEntry(String reference, RpcSchema schema) { throw new AssertionError(); }
 }

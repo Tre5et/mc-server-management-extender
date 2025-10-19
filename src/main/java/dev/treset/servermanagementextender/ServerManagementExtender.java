@@ -1,6 +1,6 @@
 package dev.treset.servermanagementextender;
 
-import dev.treset.servermanagementextender.accessors.ManagementServerAccessor;
+import dev.treset.servermanagementextender.mixin.ManagementServerMixin;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.registry.entry.RegistryEntry;
@@ -33,8 +33,8 @@ public class ServerManagementExtender implements ModInitializer {
             T payload
     ) {
         if (isInitialized()) return;
-        ((ManagementServerAccessor)managementServer)
-                .forEachConnection(connection ->
+        ((ManagementServerMixin)managementServer)
+                .msme$forEachConnection(connection ->
                         connection.sendNotification(method, payload)
                 );
     }
