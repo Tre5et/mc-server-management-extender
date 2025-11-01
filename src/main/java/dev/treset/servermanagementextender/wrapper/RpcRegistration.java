@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 public class RpcRegistration {
     public static void applyRegister() {
         Reflections reflections = new Reflections(new ConfigurationBuilder()
-                .setUrls(ClasspathHelper.forPackage(""))
+                .setUrls(ClasspathHelper.forClassLoader())
                 .setScanners(Scanners.TypesAnnotated));
 
         Set<Class<?>> res1 = reflections
