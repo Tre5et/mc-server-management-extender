@@ -1,15 +1,23 @@
 package dev.treset.servermanagementextender.wrapper;
 
 import com.mojang.serialization.Codec;
+import dev.treset.servermanagementextender.wrapper.enumeration.EnumTransformer;
 import net.minecraft.server.dedicated.management.RpcKickReason;
 import net.minecraft.server.dedicated.management.RpcPlayer;
 import net.minecraft.server.dedicated.management.UriUtil;
 import net.minecraft.server.dedicated.management.schema.RpcSchema;
 import net.minecraft.server.dedicated.management.schema.RpcSchemaEntry;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.StringIdentifiable;
+import net.minecraft.util.dynamic.Codecs;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 /**
  * A wrapper containing codec and schema required for RPC methods.
@@ -79,7 +87,7 @@ public class ManagementSchema<T> {
      * @param builderFunction A function getting an RPC schema builder as the first parameter and a SchemaWrapper placeholder as the second parameter.
      *                        The SchemaWrapper parameter can be used to define recursive parameters by using it in the {@code parameter} or {@code optionalParameter} builder methods.
      *                        Must return a SchemaWrapper of the same type.
-     * @return The constructed SchemaWrapper.
+     * @return The constructed management schema.
      * @param <T> The type of object this schema represents.
      */
     public static <T> ManagementSchema<T> recursive(Identifier identifier, BiFunction<RecordSchemaBuilder.RecordSchemaBuilder0<T>, ManagementSchema<T>, ManagementSchema<T>> builderFunction) {
@@ -95,11 +103,88 @@ public class ManagementSchema<T> {
      * @param builderFunction A function getting an RPC schema builder as the first parameter and a SchemaWrapper placeholder as the second parameter.
      *                        The SchemaWrapper parameter can be used to define recursive parameters by using it in the {@code parameter} or {@code optionalParameter} builder methods.
      *                        Must return a SchemaWrapper of the same type.
-     * @return The constructed SchemaWrapper.
+     * @return The constructed management schema.
      * @param <T> The type of object this schema represents.
      */
     public static <T> ManagementSchema<T> recursive(String namespace, String name, BiFunction<RecordSchemaBuilder.RecordSchemaBuilder0<T>, ManagementSchema<T>, ManagementSchema<T>> builderFunction) {
         return recursive(Identifier.of(namespace, name), builderFunction);
+    }
+
+    /**
+     * Creates a management schema from an enum.
+     * @param name The name of the schema to create.
+     * @param values A function supplying all enum values. Typically {@code Enum::values}.
+     * @param transformer A {@code EnumTransformer} used to transform the enum value names to JSON strings.
+     * @return The constructed management schema.
+     * @param <T> The type of the enum.
+     */
+    public static <T extends Enum<T>> ManagementSchema<T> ofEnum(String name, T[] values, EnumTransformer<T> transformer) {
+        List<String> list = Stream.of(values).map(transformer::transform).toList();
+        Function<String, T> function = StringIdentifiable.createMapper(values, transformer::transform);
+        return new ManagementSchema<>(
+                Codecs.orCompressed(Codec.stringResolver(transformer::transform, function), Codecs.rawIdChecked(Enum::ordinal, (ordinal) -> ordinal >= 0 && ordinal < values.length ? values[ordinal] : null, -1)),
+                RpcSchema.ofList(list),
+                name
+        );
+    }
+
+    /**
+     * Creates a management schema from an enum.
+     * @param name The name of the schema to create.
+     * @param values A function supplying all enum values. Typically {@code Enum::values}.
+     * @return The constructed management schema.
+     * @param <T> The type of the enum.
+     */
+    public static <T extends Enum<T>> ManagementSchema<T> ofEnum(String name, T[] values) {
+        return ofEnum(name, values, EnumTransformer.basic());
+    }
+
+    /**
+     * Creates a management schema from an enum.
+     * @param enumClass The enum to create the management schema for.
+     * @param transformer A {@code EnumTransformer} used to transform the enum value names to JSON strings.
+     * @return The constructed management schema.
+     * @param <T> The type of the enum.
+     * @throws IllegalArgumentException If there is an error getting the values from the enum.
+     */
+    @SuppressWarnings("unchecked")
+    public static <T extends Enum<T>> ManagementSchema<T> ofEnum(Class<T> enumClass, EnumTransformer<T> transformer) throws IllegalArgumentException {
+        try {
+            Method valuesMethod = getValuesMethod(enumClass);
+            valuesMethod.setAccessible(true);
+            return ofEnum(enumClass.getSimpleName(), (T[])valuesMethod.invoke(null), transformer);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalArgumentException("Class " + enumClass.getSimpleName() + " is not an enum: no values() method", e);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new IllegalArgumentException("Failed to run values method on enum class: " + enumClass.getSimpleName(), e);
+        } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Failed to convert enum values to correct type: " + enumClass.getSimpleName(), e);
+        }
+    }
+
+    /**
+     * Creates a management schema from an enum.
+     * @param enumClass The enum to create the management schema for.
+     * @return The constructed management schema.
+     * @param <T> The type of the enum.
+     * @throws IllegalArgumentException If there is an error getting the values from the enum.
+     */
+    public static <T extends Enum<T>> ManagementSchema<T> ofEnum(Class<T> enumClass) throws IllegalArgumentException {
+        return ofEnum(enumClass, EnumTransformer.basic());
+    }
+
+    private static <T extends Enum<T>> Method getValuesMethod(Class<T> enumClass) throws NoSuchMethodException, IllegalArgumentException {
+        Method valuesMethod = enumClass.getMethod("values");
+        if(!Modifier.isStatic(valuesMethod.getModifiers())) {
+            throw new IllegalArgumentException("Class \"" + enumClass.getSimpleName() + "\" is not an enum: values() method is not static");
+        }
+        if(!valuesMethod.getReturnType().isArray()) {
+            throw new IllegalArgumentException("Class \"" + enumClass.getSimpleName() + "\" is not an enum: values() method does not return an array");
+        }
+        if(valuesMethod.getReturnType() != enumClass.arrayType()) {
+            throw new IllegalArgumentException("Class \"" + enumClass.getSimpleName() + "\" is not an enum: values() method returns array of wrong type; expected \"" + enumClass.getSimpleName() + "\", got \"" + valuesMethod.getReturnType().arrayType().getSimpleName() + "\"");
+        }
+        return valuesMethod;
     }
 
     public static ManagementSchema<Boolean> BOOLEAN = new ManagementSchema<>(Codec.BOOL, RpcSchema.BOOLEAN, "boolean");
