@@ -1,6 +1,5 @@
 package dev.treset.servermanagementextender.wrapper;
 
-import com.mojang.serialization.Codec;
 import dev.treset.servermanagementextender.ServerManagementExtender;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.dedicated.management.OutgoingRpcMethod;
@@ -29,13 +28,12 @@ public class RpcNotificationHandler<T> {
 
     /**
      * Creates an RPC notification builder.
-     * @param codec The codec of the notification content.
      * @param schema The schema of the notification content.
      * @return The RPC notification builder.
      * @param <T> The type of object the notification sends.
      */
-    public static <T> RpcNotificationBuilder<T> builder(Codec<T> codec, RpcSchemaEntry schema) {
-        return RpcNotificationBuilder.of(codec, schema);
+    public static <T> RpcNotificationBuilder<T> builder(RpcSchemaEntry<T> schema) {
+        return RpcNotificationBuilder.of(schema);
     }
 
     /**

@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public abstract class IncomingRpcMethodBuilderMixin<T extends IncomingRpcMethod> implements IncomingRpcMethodBuilderAccessor<T> {
 
     @Invoker("buildAndRegister")
-    public abstract T msme$buildAndRegister(Registry<IncomingRpcMethod> registry, Identifier id);
+    public abstract T msme$buildAndRegister(Registry<IncomingRpcMethod<?,?>> registry, Identifier id);
 
     @Override
     public T register(Identifier id) {

@@ -17,6 +17,5 @@ public abstract class MinecraftDedicatedServerMixin {
     @Inject(method = "setupServer()Z", at = @At("RETURN"))
     private void setupServer(CallbackInfoReturnable<Boolean> info) {
         ServerManagementExtender.init(getManagementServer());
-        ServerManagementExtender.notifyAll(null, null);
     }
 }

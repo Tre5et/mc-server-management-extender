@@ -24,27 +24,20 @@ import java.util.stream.Stream;
  * @param <T> The type of object the schema represents.
  */
 public class ManagementSchema<T> {
-    private final Codec<T> codec;
-    private final RpcSchema schema;
+    private final RpcSchema<T> schema;
     private final String name;
 
-    public ManagementSchema(Codec<T> codec, RpcSchema schema, String name) {
-        this.codec = codec;
+    public ManagementSchema(RpcSchema<T> schema, String name) {
         this.schema = schema;
         this.name = name;
     }
 
-    public ManagementSchema(Codec<T> codec, RpcSchemaEntry schema) {
-        this.codec = codec;
+    public ManagementSchema(RpcSchemaEntry<T> schema) {
         this.schema = schema == null ? null : schema.ref();
         this.name = schema == null ? null : schema.name();
     }
 
-    public Codec<T> getCodec() {
-        return codec;
-    }
-
-    public RpcSchema getSchema() {
+    public RpcSchema<T> getSchema() {
         return schema;
     }
 
@@ -57,13 +50,13 @@ public class ManagementSchema<T> {
      * @return The list schema of the same type.
      */
     public ManagementSchema<List<T>> asList() {
-        return new ManagementSchema<>(codec == null ? null : Codec.list(codec), schema == null ? null : schema.asArray(), name);
+        return new ManagementSchema<>(schema == null ? null : schema.asArray(), name);
     }
 
     /**
-     * Creates a builder for an RPC schema extension.
+     * Creates a builder for a management schema.
      * @param identifier The identifier of the schema. Must be unique.
-     * @return A RPC schema builder.
+     * @return A management schema builder.
      * @param <T> The type of object this schema represents. Must sometimes be manually specified since the compiler can't always infer it correctly.
      */
     public static <T> RecordSchemaBuilder.RecordSchemaBuilder0<T> builder(Identifier identifier) {
@@ -71,10 +64,10 @@ public class ManagementSchema<T> {
     }
 
     /**
-     * Creates a builder for an RPC schema extension.
+     * Creates a builder for a management schema extension.
      * @param namespace The namespace the schema should be in.
      * @param name The name of the schema. Must be unique.
-     * @return A RPC schema builder.
+     * @return A management schema builder.
      * @param <T> The type of object this schema represents. Must sometimes be manually specified since the compiler can't always infer it correctly.
      */
     public static <T> RecordSchemaBuilder.RecordSchemaBuilder0<T> builder(String namespace, String name) {
@@ -91,9 +84,9 @@ public class ManagementSchema<T> {
      * @param <T> The type of object this schema represents.
      */
     public static <T> ManagementSchema<T> recursive(Identifier identifier, BiFunction<RecordSchemaBuilder.RecordSchemaBuilder0<T>, ManagementSchema<T>, ManagementSchema<T>> builderFunction) {
-        ManagementSchema<T> wrapper = builderFunction.apply(builder(identifier), new ManagementSchema<>(null, RpcSchema.ofReference(UriUtil.createSchemasUri(identifier.toString())), identifier.toString()));
-        Codec<T> codec = Codec.recursive(identifier.toString(), c -> builderFunction.apply(builder(identifier), new ManagementSchema<>(c, null, identifier.toString())).getCodec());
-        return new ManagementSchema<>(codec, wrapper.getSchema(), identifier.toString());
+        Codec<T> codec = Codec.recursive(identifier.toString(), c -> builderFunction.apply(builder(identifier), new ManagementSchema<>(RpcSchema.ofObject(c), identifier.toString())).getSchema().codec());
+        ManagementSchema<T> wrapper = builderFunction.apply(builder(identifier), new ManagementSchema<>(RpcSchema.ofReference(UriUtil.createSchemasUri(identifier.toString()), codec), identifier.toString()));
+        return new ManagementSchema<>(wrapper.getSchema(), identifier.toString());
     }
 
     /**
@@ -121,9 +114,9 @@ public class ManagementSchema<T> {
     public static <T extends Enum<T>> ManagementSchema<T> ofEnum(String name, T[] values, EnumTransformer<T> transformer) {
         List<String> list = Stream.of(values).map(transformer::transform).toList();
         Function<String, T> function = StringIdentifiable.createMapper(values, transformer::transform);
+        Codec<T> codec = Codecs.orCompressed(Codec.stringResolver(transformer::transform, function), Codecs.rawIdChecked(Enum::ordinal, (ordinal) -> ordinal >= 0 && ordinal < values.length ? values[ordinal] : null, -1));
         return new ManagementSchema<>(
-                Codecs.orCompressed(Codec.stringResolver(transformer::transform, function), Codecs.rawIdChecked(Enum::ordinal, (ordinal) -> ordinal >= 0 && ordinal < values.length ? values[ordinal] : null, -1)),
-                RpcSchema.ofList(list),
+                RpcSchema.ofList(list, codec),
                 name
         );
     }
@@ -187,9 +180,10 @@ public class ManagementSchema<T> {
         return valuesMethod;
     }
 
-    public static ManagementSchema<Boolean> BOOLEAN = new ManagementSchema<>(Codec.BOOL, RpcSchema.BOOLEAN, "boolean");
-    public static ManagementSchema<Integer> INTEGER = new ManagementSchema<>(Codec.INT, RpcSchema.INTEGER, "integer");
-    public static ManagementSchema<String> STRING = new ManagementSchema<>(Codec.STRING, RpcSchema.STRING, "string");
-    public static ManagementSchema<RpcPlayer> PLAYER = new ManagementSchema<>(RpcPlayer.CODEC.codec(), RpcSchema.PLAYER);
-    public static ManagementSchema<RpcKickReason> MESSAGE = new ManagementSchema<>(RpcKickReason.CODEC, RpcSchema.MESSAGE);
+    public static ManagementSchema<Boolean> BOOLEAN = new ManagementSchema<>(RpcSchema.BOOLEAN, "boolean");
+    public static ManagementSchema<Integer> INTEGER = new ManagementSchema<>(RpcSchema.INTEGER, "integer");
+    public static ManagementSchema<Double> DOUBLE = new ManagementSchema<>(RpcSchema.ofLiteral("double", Codec.DOUBLE), "double");
+    public static ManagementSchema<String> STRING = new ManagementSchema<>(RpcSchema.STRING, "string");
+    public static ManagementSchema<RpcPlayer> PLAYER = new ManagementSchema<>(RpcSchema.PLAYER);
+    public static ManagementSchema<RpcKickReason> MESSAGE = new ManagementSchema<>(RpcSchema.MESSAGE);
 }

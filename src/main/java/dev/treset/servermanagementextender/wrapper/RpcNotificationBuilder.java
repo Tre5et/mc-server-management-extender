@@ -1,10 +1,8 @@
 package dev.treset.servermanagementextender.wrapper;
 
-import com.mojang.serialization.Codec;
 import dev.treset.servermanagementextender.accessors.OutgoingRpcMethodBuilderAccessor;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.dedicated.management.OutgoingRpcMethod;
-import net.minecraft.server.dedicated.management.RpcRequestParameter;
 import net.minecraft.server.dedicated.management.schema.RpcSchema;
 import net.minecraft.server.dedicated.management.schema.RpcSchemaEntry;
 import net.minecraft.util.Identifier;
@@ -15,26 +13,23 @@ import net.minecraft.util.Identifier;
  */
 public class RpcNotificationBuilder<T> {
     private String name;
-    private final Codec<T> codec;
-    private final RpcSchema schema;
+    private final RpcSchema<T> schema;
     private Identifier identifier;
     private String description;
 
-    private RpcNotificationBuilder(String name, Codec<T> codec, RpcSchema schema) {
-        this.codec = codec;
+    private RpcNotificationBuilder(String name, RpcSchema<T> schema) {
         this.name = name;
         this.schema = schema;
     }
 
     /**
      * Creates an RPC notification builder.
-     * @param codec The codec of the notification content.
      * @param schema The schema of the notification content.
      * @return The RPC notification builder.
      * @param <T> The type of object the notification sends.
      */
-    public static <T> RpcNotificationBuilder<T> of(Codec<T> codec, RpcSchemaEntry schema) {
-        return new RpcNotificationBuilder<>(schema.name(), codec, schema.schema());
+    public static <T> RpcNotificationBuilder<T> of(RpcSchemaEntry<T> schema) {
+        return new RpcNotificationBuilder<>(schema.name(), schema.schema());
     }
 
     /**
@@ -44,7 +39,7 @@ public class RpcNotificationBuilder<T> {
      * @param <T> The type of object the notification sends.
      */
     public static <T> RpcNotificationBuilder<T> of(ManagementSchema<T> schema) {
-        return new RpcNotificationBuilder<>(schema.getName(), schema.getCodec(), schema.getSchema());
+        return new RpcNotificationBuilder<>(schema.getName(), schema.getSchema());
     }
 
     /**
@@ -88,11 +83,11 @@ public class RpcNotificationBuilder<T> {
             throw new IllegalStateException("Identifier is not set");
         }
 
-        OutgoingRpcMethod.Builder<OutgoingRpcMethod.Notification<T>> builder = OutgoingRpcMethod.createNotificationBuilder(codec);
+        OutgoingRpcMethod.Builder<T, Void> builder = OutgoingRpcMethod.createNotificationBuilder();
         if(description != null) {
             builder.description(description);
         }
-        builder.requestParameter(new RpcRequestParameter(name, schema));
+        builder.requestParameter(name, schema);
 
         RegistryEntry.Reference<? extends OutgoingRpcMethod<T, ?>> method = ((OutgoingRpcMethodBuilderAccessor<? extends OutgoingRpcMethod<T, ?>>)builder)
                 .register(identifier);

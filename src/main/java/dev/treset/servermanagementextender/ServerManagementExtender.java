@@ -25,14 +25,14 @@ public class ServerManagementExtender implements ModInitializer {
     }
 
     public static boolean isInitialized() {
-        return managementServer == null;
+        return managementServer != null;
     }
 
     public static <T> void notifyAll(
             RegistryEntry.Reference<? extends OutgoingRpcMethod<T, ?>> method,
             T payload
     ) {
-        if (isInitialized()) return;
+        if (!isInitialized() || method == null) return;
         ((ManagementServerMixin)managementServer)
                 .msme$forEachConnection(connection ->
                         connection.sendNotification(method, payload)

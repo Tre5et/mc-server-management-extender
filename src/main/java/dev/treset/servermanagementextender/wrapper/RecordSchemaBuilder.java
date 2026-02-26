@@ -23,21 +23,21 @@ public abstract class RecordSchemaBuilder<T> {
         List<SchemaData<T,?>> props = propertiesList();
 
         Codec<T> codec = null;
-        RpcSchemaEntry schemaEntry = null;
+        RpcSchemaEntry<T> schemaEntry = null;
 
         if(props.stream().allMatch(p -> p.codecBuilder() != null)) {
             codec = RecordCodecBuilder.create(createInstance);
         }
 
         if(props.stream().allMatch(p -> p.schema() != null)) {
-            RpcSchema schema = RpcSchema.ofObject();
-            for (SchemaData<T, ?> p : propertiesList()) {
+            RpcSchema<T> schema = RpcSchema.ofObject(codec);
+            for (SchemaData<T, ?> p : props) {
                 schema = p.applyToSchema(schema);
             }
             schemaEntry = RpcSchemaMixin.msme$registerEntry(identifier.toString(), schema);
         }
 
-        return new ManagementSchema<>(codec, schemaEntry);
+        return new ManagementSchema<>(schemaEntry);
     }
 
     public static class RecordSchemaBuilder0<T> extends RecordSchemaBuilder<T> {
@@ -58,14 +58,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T1> The type of object that is stored in the property.
          */
-        public <T1> RecordSchemaBuilder1<T,T1> property(String name, Codec<T1> codec, RpcSchema schema, Function<T,T1> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T1> RecordSchemaBuilder1<T,T1> property(String name, RpcSchema<T1> schema, Function<T,T1> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -83,14 +82,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T1> The type of object that is stored in the property.
          */
-        public <T1> RecordSchemaBuilder1<T,Optional<T1>> optionalProperty(String name, Codec<T1> codec, RpcSchema schema, Function<T,Optional<T1>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T1> RecordSchemaBuilder1<T,Optional<T1>> optionalProperty(String name, RpcSchema<T1> schema, Function<T,Optional<T1>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -132,14 +130,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T2> The type of object that is stored in the property.
          */
-        public <T2> RecordSchemaBuilder2<T,T1,T2> property(String name, Codec<T2> codec, RpcSchema schema, Function<T,T2> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T2> RecordSchemaBuilder2<T,T1,T2> property(String name, RpcSchema<T2> schema, Function<T,T2> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -157,14 +154,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <2> The type of object that is stored in the property.
+         * @param <T2> The type of object that is stored in the property.
          */
-        public <T2> RecordSchemaBuilder2<T,T1,Optional<T2>> optionalProperty(String name, Codec<T2> codec, RpcSchema schema, Function<T,Optional<T2>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T2> RecordSchemaBuilder2<T,T1,Optional<T2>> optionalProperty(String name, RpcSchema<T2> schema, Function<T,Optional<T2>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -220,14 +216,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T3> The type of object that is stored in the property.
          */
-        public <T3> RecordSchemaBuilder3<T,T1,T2,T3> property(String name, Codec<T3> codec, RpcSchema schema, Function<T,T3> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T3> RecordSchemaBuilder3<T,T1,T2,T3> property(String name, RpcSchema<T3> schema, Function<T,T3> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -245,14 +240,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <3> The type of object that is stored in the property.
+         * @param <T3> The type of object that is stored in the property.
          */
-        public <T3> RecordSchemaBuilder3<T,T1,T2,Optional<T3>> optionalProperty(String name, Codec<T3> codec, RpcSchema schema, Function<T,Optional<T3>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T3> RecordSchemaBuilder3<T,T1,T2,Optional<T3>> optionalProperty(String name, RpcSchema<T3> schema, Function<T,Optional<T3>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -311,14 +305,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T4> The type of object that is stored in the property.
          */
-        public <T4> RecordSchemaBuilder4<T,T1,T2,T3,T4> property(String name, Codec<T4> codec, RpcSchema schema, Function<T,T4> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T4> RecordSchemaBuilder4<T,T1,T2,T3,T4> property(String name, RpcSchema<T4> schema, Function<T,T4> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -336,14 +329,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <4> The type of object that is stored in the property.
+         * @param <T4> The type of object that is stored in the property.
          */
-        public <T4> RecordSchemaBuilder4<T,T1,T2,T3,Optional<T4>> optionalProperty(String name, Codec<T4> codec, RpcSchema schema, Function<T,Optional<T4>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T4> RecordSchemaBuilder4<T,T1,T2,T3,Optional<T4>> optionalProperty(String name, RpcSchema<T4> schema, Function<T,Optional<T4>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -405,14 +397,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T5> The type of object that is stored in the property.
          */
-        public <T5> RecordSchemaBuilder5<T,T1,T2,T3,T4,T5> property(String name, Codec<T5> codec, RpcSchema schema, Function<T,T5> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T5> RecordSchemaBuilder5<T,T1,T2,T3,T4,T5> property(String name, RpcSchema<T5> schema, Function<T,T5> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -430,14 +421,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <5> The type of object that is stored in the property.
+         * @param <T5> The type of object that is stored in the property.
          */
-        public <T5> RecordSchemaBuilder5<T,T1,T2,T3,T4,Optional<T5>> optionalProperty(String name, Codec<T5> codec, RpcSchema schema, Function<T,Optional<T5>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T5> RecordSchemaBuilder5<T,T1,T2,T3,T4,Optional<T5>> optionalProperty(String name, RpcSchema<T5> schema, Function<T,Optional<T5>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -502,14 +492,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T6> The type of object that is stored in the property.
          */
-        public <T6> RecordSchemaBuilder6<T,T1,T2,T3,T4,T5,T6> property(String name, Codec<T6> codec, RpcSchema schema, Function<T,T6> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T6> RecordSchemaBuilder6<T,T1,T2,T3,T4,T5,T6> property(String name, RpcSchema<T6> schema, Function<T,T6> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -527,14 +516,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <6> The type of object that is stored in the property.
+         * @param <T6> The type of object that is stored in the property.
          */
-        public <T6> RecordSchemaBuilder6<T,T1,T2,T3,T4,T5,Optional<T6>> optionalProperty(String name, Codec<T6> codec, RpcSchema schema, Function<T,Optional<T6>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T6> RecordSchemaBuilder6<T,T1,T2,T3,T4,T5,Optional<T6>> optionalProperty(String name, RpcSchema<T6> schema, Function<T,Optional<T6>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -602,14 +590,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T7> The type of object that is stored in the property.
          */
-        public <T7> RecordSchemaBuilder7<T,T1,T2,T3,T4,T5,T6,T7> property(String name, Codec<T7> codec, RpcSchema schema, Function<T,T7> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T7> RecordSchemaBuilder7<T,T1,T2,T3,T4,T5,T6,T7> property(String name, RpcSchema<T7> schema, Function<T,T7> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -627,14 +614,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <7> The type of object that is stored in the property.
+         * @param <T7> The type of object that is stored in the property.
          */
-        public <T7> RecordSchemaBuilder7<T,T1,T2,T3,T4,T5,T6,Optional<T7>> optionalProperty(String name, Codec<T7> codec, RpcSchema schema, Function<T,Optional<T7>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T7> RecordSchemaBuilder7<T,T1,T2,T3,T4,T5,T6,Optional<T7>> optionalProperty(String name, RpcSchema<T7> schema, Function<T,Optional<T7>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -705,14 +691,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T8> The type of object that is stored in the property.
          */
-        public <T8> RecordSchemaBuilder8<T,T1,T2,T3,T4,T5,T6,T7,T8> property(String name, Codec<T8> codec, RpcSchema schema, Function<T,T8> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T8> RecordSchemaBuilder8<T,T1,T2,T3,T4,T5,T6,T7,T8> property(String name, RpcSchema<T8> schema, Function<T,T8> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -730,14 +715,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <8> The type of object that is stored in the property.
+         * @param <T8> The type of object that is stored in the property.
          */
-        public <T8> RecordSchemaBuilder8<T,T1,T2,T3,T4,T5,T6,T7,Optional<T8>> optionalProperty(String name, Codec<T8> codec, RpcSchema schema, Function<T,Optional<T8>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T8> RecordSchemaBuilder8<T,T1,T2,T3,T4,T5,T6,T7,Optional<T8>> optionalProperty(String name, RpcSchema<T8> schema, Function<T,Optional<T8>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -811,14 +795,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T9> The type of object that is stored in the property.
          */
-        public <T9> RecordSchemaBuilder9<T,T1,T2,T3,T4,T5,T6,T7,T8,T9> property(String name, Codec<T9> codec, RpcSchema schema, Function<T,T9> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T9> RecordSchemaBuilder9<T,T1,T2,T3,T4,T5,T6,T7,T8,T9> property(String name, RpcSchema<T9> schema, Function<T,T9> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -836,14 +819,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <9> The type of object that is stored in the property.
+         * @param <T9> The type of object that is stored in the property.
          */
-        public <T9> RecordSchemaBuilder9<T,T1,T2,T3,T4,T5,T6,T7,T8,Optional<T9>> optionalProperty(String name, Codec<T9> codec, RpcSchema schema, Function<T,Optional<T9>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T9> RecordSchemaBuilder9<T,T1,T2,T3,T4,T5,T6,T7,T8,Optional<T9>> optionalProperty(String name, RpcSchema<T9> schema, Function<T,Optional<T9>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -920,14 +902,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T10> The type of object that is stored in the property.
          */
-        public <T10> RecordSchemaBuilder10<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10> property(String name, Codec<T10> codec, RpcSchema schema, Function<T,T10> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T10> RecordSchemaBuilder10<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10> property(String name, RpcSchema<T10> schema, Function<T,T10> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -945,14 +926,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <10> The type of object that is stored in the property.
+         * @param <T10> The type of object that is stored in the property.
          */
-        public <T10> RecordSchemaBuilder10<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,Optional<T10>> optionalProperty(String name, Codec<T10> codec, RpcSchema schema, Function<T,Optional<T10>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T10> RecordSchemaBuilder10<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,Optional<T10>> optionalProperty(String name, RpcSchema<T10> schema, Function<T,Optional<T10>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -1032,14 +1012,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T11> The type of object that is stored in the property.
          */
-        public <T11> RecordSchemaBuilder11<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11> property(String name, Codec<T11> codec, RpcSchema schema, Function<T,T11> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T11> RecordSchemaBuilder11<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11> property(String name, RpcSchema<T11> schema, Function<T,T11> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -1057,14 +1036,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <11> The type of object that is stored in the property.
+         * @param <T11> The type of object that is stored in the property.
          */
-        public <T11> RecordSchemaBuilder11<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,Optional<T11>> optionalProperty(String name, Codec<T11> codec, RpcSchema schema, Function<T,Optional<T11>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T11> RecordSchemaBuilder11<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,Optional<T11>> optionalProperty(String name, RpcSchema<T11> schema, Function<T,Optional<T11>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -1147,14 +1125,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T12> The type of object that is stored in the property.
          */
-        public <T12> RecordSchemaBuilder12<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12> property(String name, Codec<T12> codec, RpcSchema schema, Function<T,T12> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T12> RecordSchemaBuilder12<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12> property(String name, RpcSchema<T12> schema, Function<T,T12> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -1172,14 +1149,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <12> The type of object that is stored in the property.
+         * @param <T12> The type of object that is stored in the property.
          */
-        public <T12> RecordSchemaBuilder12<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,Optional<T12>> optionalProperty(String name, Codec<T12> codec, RpcSchema schema, Function<T,Optional<T12>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T12> RecordSchemaBuilder12<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,Optional<T12>> optionalProperty(String name, RpcSchema<T12> schema, Function<T,Optional<T12>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -1265,14 +1241,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T13> The type of object that is stored in the property.
          */
-        public <T13> RecordSchemaBuilder13<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13> property(String name, Codec<T13> codec, RpcSchema schema, Function<T,T13> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T13> RecordSchemaBuilder13<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13> property(String name, RpcSchema<T13> schema, Function<T,T13> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -1290,14 +1265,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <13> The type of object that is stored in the property.
+         * @param <T13> The type of object that is stored in the property.
          */
-        public <T13> RecordSchemaBuilder13<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,Optional<T13>> optionalProperty(String name, Codec<T13> codec, RpcSchema schema, Function<T,Optional<T13>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T13> RecordSchemaBuilder13<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,Optional<T13>> optionalProperty(String name, RpcSchema<T13> schema, Function<T,Optional<T13>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -1386,14 +1360,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T14> The type of object that is stored in the property.
          */
-        public <T14> RecordSchemaBuilder14<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14> property(String name, Codec<T14> codec, RpcSchema schema, Function<T,T14> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T14> RecordSchemaBuilder14<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14> property(String name, RpcSchema<T14> schema, Function<T,T14> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -1411,14 +1384,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <14> The type of object that is stored in the property.
+         * @param <T14> The type of object that is stored in the property.
          */
-        public <T14> RecordSchemaBuilder14<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,Optional<T14>> optionalProperty(String name, Codec<T14> codec, RpcSchema schema, Function<T,Optional<T14>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T14> RecordSchemaBuilder14<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,Optional<T14>> optionalProperty(String name, RpcSchema<T14> schema, Function<T,Optional<T14>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -1510,14 +1482,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T15> The type of object that is stored in the property.
          */
-        public <T15> RecordSchemaBuilder15<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15> property(String name, Codec<T15> codec, RpcSchema schema, Function<T,T15> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T15> RecordSchemaBuilder15<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15> property(String name, RpcSchema<T15> schema, Function<T,T15> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -1535,14 +1506,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <15> The type of object that is stored in the property.
+         * @param <T15> The type of object that is stored in the property.
          */
-        public <T15> RecordSchemaBuilder15<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,Optional<T15>> optionalProperty(String name, Codec<T15> codec, RpcSchema schema, Function<T,Optional<T15>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T15> RecordSchemaBuilder15<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,Optional<T15>> optionalProperty(String name, RpcSchema<T15> schema, Function<T,Optional<T15>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -1637,14 +1607,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds a property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
          * @param <T16> The type of object that is stored in the property.
          */
-        public <T16> RecordSchemaBuilder16<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16> property(String name, Codec<T16> codec, RpcSchema schema, Function<T,T16> getter) {
-            return property(SchemaData.of(name, codec, schema, getter));
+        public <T16> RecordSchemaBuilder16<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,T16> property(String name, RpcSchema<T16> schema, Function<T,T16> getter) {
+            return property(SchemaData.of(name, schema, getter));
         }
 
         /**
@@ -1662,14 +1631,13 @@ public abstract class RecordSchemaBuilder<T> {
         /**
          * Adds an optional property to the schema.
          * @param name The name of the property.
-         * @param codec The codec of the property.
          * @param schema The schema of the property.
          * @param getter A getter to get the optional property value from the parent object represented by the parent schema.
          * @return A new RecordSchemaBuilder containing the new property.
-         * @param <16> The type of object that is stored in the property.
+         * @param <T16> The type of object that is stored in the property.
          */
-        public <T16> RecordSchemaBuilder16<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,Optional<T16>> optionalProperty(String name, Codec<T16> codec, RpcSchema schema, Function<T,Optional<T16>> getter) {
-            return property(SchemaData.ofOptional(name, codec, schema, getter));
+        public <T16> RecordSchemaBuilder16<T,T1,T2,T3,T4,T5,T6,T7,T8,T9,T10,T11,T12,T13,T14,T15,Optional<T16>> optionalProperty(String name, RpcSchema<T16> schema, Function<T,Optional<T16>> getter) {
+            return property(SchemaData.ofOptional(name, schema, getter));
         }
 
         /**
@@ -1787,5 +1755,4 @@ public abstract class RecordSchemaBuilder<T> {
             return List.of(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16);
         }
     }
-
 }

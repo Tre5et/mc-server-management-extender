@@ -1,11 +1,8 @@
 package dev.treset.servermanagementextender.wrapper;
 
 import com.mojang.datafixers.util.Function3;
-import com.mojang.serialization.Codec;
 import dev.treset.servermanagementextender.accessors.IncomingRpcMethodBuilderAccessor;
 import net.minecraft.server.dedicated.management.IncomingRpcMethod;
-import net.minecraft.server.dedicated.management.RpcRequestParameter;
-import net.minecraft.server.dedicated.management.RpcResponseResult;
 import net.minecraft.server.dedicated.management.dispatch.ManagementHandlerDispatcher;
 import net.minecraft.server.dedicated.management.network.ManagementConnectionId;
 import net.minecraft.server.dedicated.management.schema.RpcSchema;
@@ -20,26 +17,23 @@ import java.util.function.Function;
  */
 public abstract class RpcMethodBuilder<R> {
     protected String name;
-    protected final Codec<R> codec;
-    protected final RpcSchema schema;
+    protected final RpcSchema<R> schema;
     protected Identifier identifier;
     protected String description;
 
-    private RpcMethodBuilder(String name, Codec<R> codec, RpcSchema schema) {
+    private RpcMethodBuilder(String name, RpcSchema<R> schema) {
         this.name = name;
-        this.codec = codec;
         this.schema = schema;
     }
 
     /**
      * Creates an RPC request method builder.
-     * @param codec The codec of the RPC response.
      * @param schema The schema of the RPC response.
      * @return The RPC request method builder.
      * @param <R> The type of object contained in the RPC response.
      */
-    public static <R> RpcParameterlessMethodBuilder<R> of(Codec<R> codec, RpcSchemaEntry schema) {
-        return new RpcParameterlessMethodBuilder<>(schema.name(), codec, schema.schema());
+    public static <R> RpcParameterlessMethodBuilder<R> of(RpcSchemaEntry<R> schema) {
+        return new RpcParameterlessMethodBuilder<>(schema.name(), schema.schema());
     }
 
     /**
@@ -49,12 +43,12 @@ public abstract class RpcMethodBuilder<R> {
      * @param <R> The type of object contained in the RPC response.
      */
     public static <R> RpcParameterlessMethodBuilder<R> of(ManagementSchema<R> schema) {
-        return new RpcParameterlessMethodBuilder<>(schema.getName(), schema.getCodec(), schema.getSchema());
+        return new RpcParameterlessMethodBuilder<>(schema.getName(), schema.getSchema());
     }
 
     public static class RpcParameterlessMethodBuilder<R> extends RpcMethodBuilder<R> {
-        private RpcParameterlessMethodBuilder(String name, Codec<R> codec, RpcSchema schema) {
-            super(name, codec, schema);
+        private RpcParameterlessMethodBuilder(String name, RpcSchema<R> schema) {
+            super(name, schema);
         }
 
         /**
@@ -97,12 +91,10 @@ public abstract class RpcMethodBuilder<R> {
         public <T> RpcParametrizedMethodBuilder<T,R> parameter(ManagementSchema<T> schema) {
             return new RpcParametrizedMethodBuilder<>(
                     name,
-                    codec,
                     this.schema,
                     identifier,
                     description,
                     schema.getName(),
-                    schema.getCodec(),
                     schema.getSchema()
             );
         }
@@ -113,37 +105,34 @@ public abstract class RpcMethodBuilder<R> {
          * @return The created method. Can generally be ignored.
          */
         @SuppressWarnings("unchecked")
-        public IncomingRpcMethod.Parameterless<R> build(Function<ManagementHandlerDispatcher, R> handler) {
+        public IncomingRpcMethod.Parameterless<Void, R> build(Function<ManagementHandlerDispatcher, R> handler) {
             if(identifier == null) {
                 throw new IllegalStateException("Identifier is not set");
             }
 
-            IncomingRpcMethod.Builder<IncomingRpcMethod.Parameterless<R>> builder = IncomingRpcMethod.createParameterlessBuilder(
-                    handler,
-                    codec
+            IncomingRpcMethod.Builder<Void, R> builder = IncomingRpcMethod.createParameterlessBuilder(
+                    handler
             ).result(
-                    new RpcResponseResult(name, schema)
+                    name, schema
             );
 
             if(description != null) {
                 builder = builder.description(description);
             }
 
-            return ((IncomingRpcMethodBuilderAccessor<IncomingRpcMethod.Parameterless<R>>)builder)
+            return ((IncomingRpcMethodBuilderAccessor<IncomingRpcMethod.Parameterless<Void, R>>)builder)
                     .register(identifier);
         }
     }
 
     public static class RpcParametrizedMethodBuilder<T,R> extends RpcMethodBuilder<R> {
         private String parameterName;
-        private final Codec<T> parameterCodec;
-        private final RpcSchema parameterSchema;
+        private final RpcSchema<T> parameterSchema;
 
-        private RpcParametrizedMethodBuilder(String name, Codec<R> codec, RpcSchema schema, Identifier identifier, String description, String parameterName, Codec<T> parameterCodec, RpcSchema parameterSchema) {
-            super(name, codec, schema);
+        private RpcParametrizedMethodBuilder(String name, RpcSchema<R> schema, Identifier identifier, String description, String parameterName, RpcSchema<T> parameterSchema) {
+            super(name, schema);
             this.identifier = identifier;
             this.description = description;
-            this.parameterCodec = parameterCodec;
             this.parameterSchema = parameterSchema;
             this.parameterName = parameterName;
         }
@@ -200,17 +189,13 @@ public abstract class RpcMethodBuilder<R> {
                 throw new IllegalStateException("Identifier is not set");
             }
 
-            IncomingRpcMethod.Builder<IncomingRpcMethod.Parameterized<T,R>> builder = IncomingRpcMethod.createParameterizedBuilder(
-                    handler::apply,
-                    parameterCodec,
-                    codec
+            IncomingRpcMethod.Builder<T,R> builder = IncomingRpcMethod.createParameterizedBuilder(
+                    handler::apply
             ).parameter(
-                    new RpcRequestParameter(
-                            parameterName,
-                            parameterSchema
-                    )
+                    name,
+                    parameterSchema
             ).result(
-                    new RpcResponseResult(name, schema)
+                    name, schema
             );
 
             if(description != null) {
