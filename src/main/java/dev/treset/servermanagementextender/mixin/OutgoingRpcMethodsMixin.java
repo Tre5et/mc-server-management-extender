@@ -1,7 +1,7 @@
 package dev.treset.servermanagementextender.mixin;
 
 import dev.treset.servermanagementextender.wrapper.RpcRegistration;
-import net.minecraft.server.dedicated.management.OutgoingRpcMethods;
+import net.minecraft.server.jsonrpc.OutgoingRpcMethods;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

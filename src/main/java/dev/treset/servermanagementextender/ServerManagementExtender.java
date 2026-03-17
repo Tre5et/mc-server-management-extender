@@ -3,9 +3,9 @@ package dev.treset.servermanagementextender;
 import dev.treset.servermanagementextender.mixin.ManagementServerMixin;
 import net.fabricmc.api.ModInitializer;
 
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.dedicated.management.ManagementServer;
-import net.minecraft.server.dedicated.management.OutgoingRpcMethod;
+import net.minecraft.core.Holder;
+import net.minecraft.server.jsonrpc.ManagementServer;
+import net.minecraft.server.jsonrpc.OutgoingRpcMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,9 +29,9 @@ public class ServerManagementExtender implements ModInitializer {
     }
 
     public static <T> void notifyAll(
-            RegistryEntry.Reference<? extends OutgoingRpcMethod<T, ?>> method,
+            Holder.Reference<? extends OutgoingRpcMethod<T, ?>> method,
             T payload
-    ) {
+            ) {
         if (!isInitialized() || method == null) return;
         ((ManagementServerMixin)managementServer)
                 .msme$forEachConnection(connection ->

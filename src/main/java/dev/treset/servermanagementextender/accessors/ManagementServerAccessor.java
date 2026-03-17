@@ -1,9 +1,9 @@
 package dev.treset.servermanagementextender.accessors;
 
-import net.minecraft.server.dedicated.management.network.ManagementConnectionHandler;
+import net.minecraft.server.jsonrpc.Connection;
 
 import java.util.function.Consumer;
 
 public interface ManagementServerAccessor {
-    void forEachConnection(Consumer<ManagementConnectionHandler> task);
+    void forEachConnection(Consumer<Connection> task);
 }

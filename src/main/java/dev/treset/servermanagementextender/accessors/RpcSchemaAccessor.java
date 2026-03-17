@@ -1,8 +1,8 @@
 package dev.treset.servermanagementextender.accessors;
 
-import net.minecraft.server.dedicated.management.schema.RpcSchema;
-import net.minecraft.server.dedicated.management.schema.RpcSchemaEntry;
+import net.minecraft.server.jsonrpc.api.Schema;
+import net.minecraft.server.jsonrpc.api.SchemaComponent;
 
-public interface RpcSchemaAccessor {
-    RpcSchemaEntry register(String name, RpcSchema schema);
+public interface RpcSchemaAccessor<T> {
+    SchemaComponent<T> register(String name, Schema<T> schema);
 }

@@ -3,12 +3,12 @@
 	"package": "dev.treset.servermanagementextender.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"IncomingRpcMethodBuilderMixin",
+        "DedicatedServerMixin",
+        "IncomingRpcMethodBuilderMixin",
         "ManagementServerMixin",
-        "MinecraftDedicatedServerMixin",
         "OutgoingRpcMethodBuilderMixin",
         "OutgoingRpcMethodsMixin",
-        "RpcSchemaMixin"
+        "SchemaMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

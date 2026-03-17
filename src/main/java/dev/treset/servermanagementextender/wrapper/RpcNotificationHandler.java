@@ -1,18 +1,18 @@
 package dev.treset.servermanagementextender.wrapper;
 
 import dev.treset.servermanagementextender.ServerManagementExtender;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.dedicated.management.OutgoingRpcMethod;
-import net.minecraft.server.dedicated.management.schema.RpcSchemaEntry;
+import net.minecraft.core.Holder;
+import net.minecraft.server.jsonrpc.OutgoingRpcMethod;
+import net.minecraft.server.jsonrpc.api.SchemaComponent;
 
 /**
  * Allows sending an RPC notification.
  * @param <T> The type of object the notification sends.
  */
 public class RpcNotificationHandler<T> {
-    private final RegistryEntry.Reference<? extends OutgoingRpcMethod<T, ?>> method;
+    private final Holder.Reference<? extends OutgoingRpcMethod<T, ?>> method;
 
-    public RpcNotificationHandler(RegistryEntry.Reference<? extends OutgoingRpcMethod<T, ?>> method) {
+    public RpcNotificationHandler(Holder.Reference<? extends OutgoingRpcMethod<T, ?>> method) {
         this.method = method;
     }
 
@@ -32,7 +32,7 @@ public class RpcNotificationHandler<T> {
      * @return The RPC notification builder.
      * @param <T> The type of object the notification sends.
      */
-    public static <T> RpcNotificationBuilder<T> builder(RpcSchemaEntry<T> schema) {
+    public static <T> RpcNotificationBuilder<T> builder(SchemaComponent<T> schema) {
         return RpcNotificationBuilder.of(schema);
     }
 

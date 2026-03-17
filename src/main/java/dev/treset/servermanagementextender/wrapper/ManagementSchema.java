@@ -2,14 +2,14 @@ package dev.treset.servermanagementextender.wrapper;
 
 import com.mojang.serialization.Codec;
 import dev.treset.servermanagementextender.wrapper.enumeration.EnumTransformer;
-import net.minecraft.server.dedicated.management.RpcKickReason;
-import net.minecraft.server.dedicated.management.RpcPlayer;
-import net.minecraft.server.dedicated.management.UriUtil;
-import net.minecraft.server.dedicated.management.schema.RpcSchema;
-import net.minecraft.server.dedicated.management.schema.RpcSchemaEntry;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.StringIdentifiable;
-import net.minecraft.util.dynamic.Codecs;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.jsonrpc.api.PlayerDto;
+import net.minecraft.server.jsonrpc.api.ReferenceUtil;
+import net.minecraft.server.jsonrpc.api.Schema;
+import net.minecraft.server.jsonrpc.api.SchemaComponent;
+import net.minecraft.server.jsonrpc.methods.Message;
+import net.minecraft.util.ExtraCodecs;
+import net.minecraft.util.StringRepresentable;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -24,20 +24,20 @@ import java.util.stream.Stream;
  * @param <T> The type of object the schema represents.
  */
 public class ManagementSchema<T> {
-    private final RpcSchema<T> schema;
+    private final Schema<T> schema;
     private final String name;
 
-    public ManagementSchema(RpcSchema<T> schema, String name) {
+    public ManagementSchema(Schema<T> schema, String name) {
         this.schema = schema;
         this.name = name;
     }
 
-    public ManagementSchema(RpcSchemaEntry<T> schema) {
-        this.schema = schema == null ? null : schema.ref();
+    public ManagementSchema(SchemaComponent<T> schema) {
+        this.schema = schema == null ? null : schema.schema();
         this.name = schema == null ? null : schema.name();
     }
 
-    public RpcSchema<T> getSchema() {
+    public Schema<T> getSchema() {
         return schema;
     }
 
@@ -71,7 +71,7 @@ public class ManagementSchema<T> {
      * @param <T> The type of object this schema represents. Must sometimes be manually specified since the compiler can't always infer it correctly.
      */
     public static <T> RecordSchemaBuilder.RecordSchemaBuilder0<T> builder(String namespace, String name) {
-        return builder(Identifier.of(namespace, name));
+        return builder(Identifier.fromNamespaceAndPath(namespace, name));
     }
 
     /**
@@ -84,8 +84,8 @@ public class ManagementSchema<T> {
      * @param <T> The type of object this schema represents.
      */
     public static <T> ManagementSchema<T> recursive(Identifier identifier, BiFunction<RecordSchemaBuilder.RecordSchemaBuilder0<T>, ManagementSchema<T>, ManagementSchema<T>> builderFunction) {
-        Codec<T> codec = Codec.recursive(identifier.toString(), c -> builderFunction.apply(builder(identifier), new ManagementSchema<>(RpcSchema.ofObject(c), identifier.toString())).getSchema().codec());
-        ManagementSchema<T> wrapper = builderFunction.apply(builder(identifier), new ManagementSchema<>(RpcSchema.ofReference(UriUtil.createSchemasUri(identifier.toString()), codec), identifier.toString()));
+        Codec<T> codec = Codec.recursive(identifier.toString(), c -> builderFunction.apply(builder(identifier), new ManagementSchema<>(Schema.record(c), identifier.toString())).getSchema().codec());
+        ManagementSchema<T> wrapper = builderFunction.apply(builder(identifier), new ManagementSchema<>(Schema.ofRef(ReferenceUtil.createLocalReference(identifier.toString()), codec), identifier.toString()));
         return new ManagementSchema<>(wrapper.getSchema(), identifier.toString());
     }
 
@@ -100,7 +100,7 @@ public class ManagementSchema<T> {
      * @param <T> The type of object this schema represents.
      */
     public static <T> ManagementSchema<T> recursive(String namespace, String name, BiFunction<RecordSchemaBuilder.RecordSchemaBuilder0<T>, ManagementSchema<T>, ManagementSchema<T>> builderFunction) {
-        return recursive(Identifier.of(namespace, name), builderFunction);
+        return recursive(Identifier.fromNamespaceAndPath(namespace, name), builderFunction);
     }
 
     /**
@@ -113,10 +113,10 @@ public class ManagementSchema<T> {
      */
     public static <T extends Enum<T>> ManagementSchema<T> ofEnum(String name, T[] values, EnumTransformer<T> transformer) {
         List<String> list = Stream.of(values).map(transformer::transform).toList();
-        Function<String, T> function = StringIdentifiable.createMapper(values, transformer::transform);
-        Codec<T> codec = Codecs.orCompressed(Codec.stringResolver(transformer::transform, function), Codecs.rawIdChecked(Enum::ordinal, (ordinal) -> ordinal >= 0 && ordinal < values.length ? values[ordinal] : null, -1));
+        Function<String, T> function = StringRepresentable.createNameLookup(values, transformer::transform);
+        Codec<T> codec = ExtraCodecs.orCompressed(Codec.stringResolver(transformer::transform, function), ExtraCodecs.idResolverCodec(Enum::ordinal, (ordinal) -> ordinal >= 0 && ordinal < values.length ? values[ordinal] : null, -1));
         return new ManagementSchema<>(
-                RpcSchema.ofList(list, codec),
+                Schema.ofEnum(list, codec),
                 name
         );
     }
@@ -180,10 +180,10 @@ public class ManagementSchema<T> {
         return valuesMethod;
     }
 
-    public static ManagementSchema<Boolean> BOOLEAN = new ManagementSchema<>(RpcSchema.BOOLEAN, "boolean");
-    public static ManagementSchema<Integer> INTEGER = new ManagementSchema<>(RpcSchema.INTEGER, "integer");
-    public static ManagementSchema<Double> DOUBLE = new ManagementSchema<>(RpcSchema.ofLiteral("double", Codec.DOUBLE), "double");
-    public static ManagementSchema<String> STRING = new ManagementSchema<>(RpcSchema.STRING, "string");
-    public static ManagementSchema<RpcPlayer> PLAYER = new ManagementSchema<>(RpcSchema.PLAYER);
-    public static ManagementSchema<RpcKickReason> MESSAGE = new ManagementSchema<>(RpcSchema.MESSAGE);
+    public static ManagementSchema<Boolean> BOOLEAN = new ManagementSchema<>(Schema.BOOL_SCHEMA, "boolean");
+    public static ManagementSchema<Integer> INTEGER = new ManagementSchema<>(Schema.INT_SCHEMA, "integer");
+    public static ManagementSchema<Double> DOUBLE = new ManagementSchema<>(Schema.ofType("double", Codec.DOUBLE), "double");
+    public static ManagementSchema<String> STRING = new ManagementSchema<>(Schema.STRING_SCHEMA, "string");
+    public static ManagementSchema<PlayerDto> PLAYER = new ManagementSchema<>(Schema.PLAYER_SCHEMA);
+    public static ManagementSchema<Message> MESSAGE = new ManagementSchema<>(Schema.MESSAGE_SCHEMA);
 }

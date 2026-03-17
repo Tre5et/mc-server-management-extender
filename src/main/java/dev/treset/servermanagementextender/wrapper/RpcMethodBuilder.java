@@ -2,12 +2,12 @@ package dev.treset.servermanagementextender.wrapper;
 
 import com.mojang.datafixers.util.Function3;
 import dev.treset.servermanagementextender.accessors.IncomingRpcMethodBuilderAccessor;
-import net.minecraft.server.dedicated.management.IncomingRpcMethod;
-import net.minecraft.server.dedicated.management.dispatch.ManagementHandlerDispatcher;
-import net.minecraft.server.dedicated.management.network.ManagementConnectionId;
-import net.minecraft.server.dedicated.management.schema.RpcSchema;
-import net.minecraft.server.dedicated.management.schema.RpcSchemaEntry;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.jsonrpc.IncomingRpcMethod;
+import net.minecraft.server.jsonrpc.api.Schema;
+import net.minecraft.server.jsonrpc.api.SchemaComponent;
+import net.minecraft.server.jsonrpc.internalapi.MinecraftApi;
+import net.minecraft.server.jsonrpc.methods.ClientInfo;
 
 import java.util.function.Function;
 
@@ -17,11 +17,11 @@ import java.util.function.Function;
  */
 public abstract class RpcMethodBuilder<R> {
     protected String name;
-    protected final RpcSchema<R> schema;
+    protected final Schema<R> schema;
     protected Identifier identifier;
     protected String description;
 
-    private RpcMethodBuilder(String name, RpcSchema<R> schema) {
+    private RpcMethodBuilder(String name, Schema<R> schema) {
         this.name = name;
         this.schema = schema;
     }
@@ -32,7 +32,7 @@ public abstract class RpcMethodBuilder<R> {
      * @return The RPC request method builder.
      * @param <R> The type of object contained in the RPC response.
      */
-    public static <R> RpcParameterlessMethodBuilder<R> of(RpcSchemaEntry<R> schema) {
+    public static <R> RpcParameterlessMethodBuilder<R> of(SchemaComponent<R> schema) {
         return new RpcParameterlessMethodBuilder<>(schema.name(), schema.schema());
     }
 
@@ -47,7 +47,7 @@ public abstract class RpcMethodBuilder<R> {
     }
 
     public static class RpcParameterlessMethodBuilder<R> extends RpcMethodBuilder<R> {
-        private RpcParameterlessMethodBuilder(String name, RpcSchema<R> schema) {
+        private RpcParameterlessMethodBuilder(String name, Schema<R> schema) {
             super(name, schema);
         }
 
@@ -68,7 +68,7 @@ public abstract class RpcMethodBuilder<R> {
          * @return The changed RPC request method builder.
          */
         public RpcParameterlessMethodBuilder<R> identifier(String namespace, String path) {
-            this.identifier = Identifier.of(namespace, path);
+            this.identifier = Identifier.fromNamespaceAndPath(namespace, path);
             return this;
         }
 
@@ -105,14 +105,14 @@ public abstract class RpcMethodBuilder<R> {
          * @return The created method. Can generally be ignored.
          */
         @SuppressWarnings("unchecked")
-        public IncomingRpcMethod.Parameterless<Void, R> build(Function<ManagementHandlerDispatcher, R> handler) {
+        public IncomingRpcMethod.ParameterlessMethod<Void, R> build(Function<MinecraftApi, R> handler) {
             if(identifier == null) {
                 throw new IllegalStateException("Identifier is not set");
             }
 
-            IncomingRpcMethod.Builder<Void, R> builder = IncomingRpcMethod.createParameterlessBuilder(
+            IncomingRpcMethod.IncomingRpcMethodBuilder<Void, R> builder = IncomingRpcMethod.method(
                     handler
-            ).result(
+            ).response(
                     name, schema
             );
 
@@ -120,16 +120,16 @@ public abstract class RpcMethodBuilder<R> {
                 builder = builder.description(description);
             }
 
-            return ((IncomingRpcMethodBuilderAccessor<IncomingRpcMethod.Parameterless<Void, R>>)builder)
+            return ((IncomingRpcMethodBuilderAccessor<IncomingRpcMethod.ParameterlessMethod<Void, R>>)builder)
                     .register(identifier);
         }
     }
 
     public static class RpcParametrizedMethodBuilder<T,R> extends RpcMethodBuilder<R> {
         private String parameterName;
-        private final RpcSchema<T> parameterSchema;
+        private final Schema<T> parameterSchema;
 
-        private RpcParametrizedMethodBuilder(String name, RpcSchema<R> schema, Identifier identifier, String description, String parameterName, RpcSchema<T> parameterSchema) {
+        private RpcParametrizedMethodBuilder(String name, Schema<R> schema, Identifier identifier, String description, String parameterName, Schema<T> parameterSchema) {
             super(name, schema);
             this.identifier = identifier;
             this.description = description;
@@ -164,7 +164,7 @@ public abstract class RpcMethodBuilder<R> {
          * @return The changed RPC request method builder.
          */
         public RpcParametrizedMethodBuilder<T,R> identifier(String namespace, String path) {
-            this.identifier = Identifier.of(namespace, path);
+            this.identifier = Identifier.fromNamespaceAndPath(namespace, path);
             return this;
         }
 
@@ -184,17 +184,17 @@ public abstract class RpcMethodBuilder<R> {
          * @return The created method. Can generally be ignored.
          */
         @SuppressWarnings("unchecked")
-        public IncomingRpcMethod.Parameterized<T,R> build(Function3<ManagementHandlerDispatcher, T, ManagementConnectionId, R> handler) {
+        public IncomingRpcMethod.Method<T,R> build(Function3<MinecraftApi, T, ClientInfo, R> handler) {
             if(identifier == null) {
                 throw new IllegalStateException("Identifier is not set");
             }
 
-            IncomingRpcMethod.Builder<T,R> builder = IncomingRpcMethod.createParameterizedBuilder(
+            IncomingRpcMethod.IncomingRpcMethodBuilder<T,R> builder = IncomingRpcMethod.method(
                     handler::apply
-            ).parameter(
+            ).param(
                     name,
                     parameterSchema
-            ).result(
+            ).response(
                     name, schema
             );
 
@@ -202,7 +202,7 @@ public abstract class RpcMethodBuilder<R> {
                 builder = builder.description(description);
             }
 
-            return ((IncomingRpcMethodBuilderAccessor<IncomingRpcMethod.Parameterized<T,R>>)builder)
+            return ((IncomingRpcMethodBuilderAccessor<IncomingRpcMethod.Method<T,R>>)builder)
                     .register(identifier);
         }
     }

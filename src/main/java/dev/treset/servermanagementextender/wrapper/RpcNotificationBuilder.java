@@ -1,11 +1,11 @@
 package dev.treset.servermanagementextender.wrapper;
 
 import dev.treset.servermanagementextender.accessors.OutgoingRpcMethodBuilderAccessor;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.dedicated.management.OutgoingRpcMethod;
-import net.minecraft.server.dedicated.management.schema.RpcSchema;
-import net.minecraft.server.dedicated.management.schema.RpcSchemaEntry;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.jsonrpc.OutgoingRpcMethod;
+import net.minecraft.server.jsonrpc.api.Schema;
+import net.minecraft.server.jsonrpc.api.SchemaComponent;
 
 /**
  * Allows configuration, building and registering of an RPC notification method.
@@ -13,11 +13,11 @@ import net.minecraft.util.Identifier;
  */
 public class RpcNotificationBuilder<T> {
     private String name;
-    private final RpcSchema<T> schema;
+    private final Schema<T> schema;
     private Identifier identifier;
     private String description;
 
-    private RpcNotificationBuilder(String name, RpcSchema<T> schema) {
+    private RpcNotificationBuilder(String name, Schema<T> schema) {
         this.name = name;
         this.schema = schema;
     }
@@ -28,7 +28,7 @@ public class RpcNotificationBuilder<T> {
      * @return The RPC notification builder.
      * @param <T> The type of object the notification sends.
      */
-    public static <T> RpcNotificationBuilder<T> of(RpcSchemaEntry<T> schema) {
+    public static <T> RpcNotificationBuilder<T> of(SchemaComponent<T> schema) {
         return new RpcNotificationBuilder<>(schema.name(), schema.schema());
     }
 
@@ -49,7 +49,7 @@ public class RpcNotificationBuilder<T> {
      * @return The changed notification method builder.
      */
     public RpcNotificationBuilder<T> identifier(String namespace, String path) {
-        this.identifier = Identifier.of(namespace, path);
+        this.identifier = Identifier.fromNamespaceAndPath(namespace, path);
         return this;
     }
 
@@ -77,20 +77,19 @@ public class RpcNotificationBuilder<T> {
      * Builds and registers the notification method. An identifier is required before building.
      * @return An RPC notification handler containing a method to send the notification.
      */
-    @SuppressWarnings("unchecked")
     public RpcNotificationHandler<T> build() {
         if(identifier == null) {
             throw new IllegalStateException("Identifier is not set");
         }
 
-        OutgoingRpcMethod.Builder<T, Void> builder = OutgoingRpcMethod.createNotificationBuilder();
+        OutgoingRpcMethod.OutgoingRpcMethodBuilder<T, Void> builder = OutgoingRpcMethod.notificationWithParams();
         if(description != null) {
             builder.description(description);
         }
-        builder.requestParameter(name, schema);
+        builder.param(name, schema);
 
-        RegistryEntry.Reference<? extends OutgoingRpcMethod<T, ?>> method = ((OutgoingRpcMethodBuilderAccessor<? extends OutgoingRpcMethod<T, ?>>)builder)
-                .register(identifier);
+        Holder.Reference<? extends OutgoingRpcMethod<T, ?>> method = ((OutgoingRpcMethodBuilderAccessor<? extends OutgoingRpcMethod<T, ?>>)builder)
+                .buildAndRegister(identifier);
 
         return new RpcNotificationHandler<>(method);
     }

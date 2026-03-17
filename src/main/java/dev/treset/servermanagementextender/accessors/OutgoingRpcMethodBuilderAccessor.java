@@ -1,9 +1,9 @@
 package dev.treset.servermanagementextender.accessors;
 
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.dedicated.management.OutgoingRpcMethod;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Holder;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.jsonrpc.OutgoingRpcMethod;
 
 public interface OutgoingRpcMethodBuilderAccessor<T extends OutgoingRpcMethod<?, ?>> {
-    RegistryEntry.Reference<T> register(Identifier id);
+    Holder.Reference<T> buildAndRegister(Identifier id);
 }
